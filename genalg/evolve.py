@@ -182,14 +182,20 @@ class EA:
     def natural_selection(self, fitness):
         id_tot = list(range(self.num_offspring+self.num_select))
         # find the best model
-        n_best = np.argmax(fitness)
-        id_tot.remove(n_best)
+        n_best = np.nanargmax(fitness)
+        id_tot.pop(n_best)
         id_select = [n_best]
+
+        # clean nan
+        id_nan = np.where(np.isnan(fitness))[0]
+        remove_index(id_tot, id_nan)
+
         # use Roullete-Wheel method
         fitness_pos = fitness[id_tot]
-        fmin = np.min(fitness_pos)
+        fmin = np.nanmin(fitness_pos)
         if fmin < 0:
             fitness_pos += fmin
+
 
         prob_select = fitness_pos / np.sum(fitness_pos)
         for n in range(self.num_select-1):
@@ -380,6 +386,13 @@ class EA:
             tag = os.path.join(self.log_dir, "id%06d"%(n))
             remove_file(tag+"_info.txt")
             remove_file(tag+"_result.txt")
+
+
+def remove_index(arr_list, id_target):
+    stack = 0
+    for n in id_target:
+        arr_list.pop(n-stack)
+        stack += 1
 
 
 def remove_element(arr, target_val):
