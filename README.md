@@ -2,7 +2,7 @@
 Genetic algorithm library
 
 # Simulation result
-![](test_out.gif)
+![Test result](https://github.com/jyKim-97/genetic_algorithm/blob/main/test_out.gif)
 
 # Purpse
 
