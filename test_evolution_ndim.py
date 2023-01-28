@@ -19,7 +19,9 @@ if __name__ == "__main__":
 
     np.random.seed(2000)
 
-    solver = evolve.EA(ndim, mu=3, num_select=5, num_offspring=20, num_parent=50, use_multiprocess=False, do_mutate=True, crossover_type="undx")
+    solver = evolve.EA(ndim, mu=3, num_select=5,
+                    num_offspring=20, num_parent=50, use_multiprocess=False,
+                    do_mutate=True, crossover_type="undx")
     solver.set_object_func(fpotential)
     pmin = np.ones(ndim) * (-10)
     pmax = np.ones(ndim) * 10
@@ -27,6 +29,7 @@ if __name__ == "__main__":
 
     solver.check_setting()
     solver.random_initialization()
+    # solver.load_history("./log")
     
     max_iter = 1000
     for n in tqdm(range(max_iter)):

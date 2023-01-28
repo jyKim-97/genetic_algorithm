@@ -376,7 +376,7 @@ class EA:
         self.parent_id = log_obj.job_id_set
         self.job_id = max_param_id
         self.clock = max_param_id
-        self.fit_score = log_obj.fit_scores[-1]
+        self.fit_score = np.array(log_obj.fit_scores[-1])
 
 def remove_index(arr_list, id_target):
     stack = 0
