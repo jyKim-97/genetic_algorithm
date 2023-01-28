@@ -25,7 +25,7 @@ def get_landscape(fobj, pmin, pmax, w=50):
 
 
 if __name__ == "__main__":
-    solver = evolve.EA(2, mu=2, num_select=5, num_offspring=20, num_parent=50, use_multiprocess=True)
+    solver = evolve.EA(2, mu=2, num_select=5, num_offspring=20, num_parent=50, use_multiprocess=False)
     solver.set_object_func(fpotential)
 
     pmin = np.array([-5.12, -5.12])
