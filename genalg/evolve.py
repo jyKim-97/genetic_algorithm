@@ -32,7 +32,6 @@ class EA:
         self.do_mutate = do_mutate
         self.crossover_type = crossover_type
 
-
     def set_object_func(self, f):
         # object function need to return float (fitness)
         # res = f([arr, job_id])
@@ -333,7 +332,6 @@ class EA:
 
         return offspring
 
-
     def print_log(self, skip_save_param=1):
         # save fitness
         with open(os.path.join(self.log_dir, "log.txt"), "a") as fid:
@@ -347,53 +345,42 @@ class EA:
             with open(os.path.join(self.log_dir, "params_%d.pkl"%(self.clock)), "wb") as fid:
                 pkl.dump(data, fid)
 
-    def load_history(self):
-        # Note: split the function into some subfunctions & arange the logic flow
-        # Note: adapt this when the number of parents are changed
-
-        fparam = [f for f in os.listdir(self.log_dir) if ".pkl" in f]
-        max_iter = np.max([int(f[7:-4]) for f in fparam])
-
-        # load data
-        with open(os.path.join(self.log_dir, "params_%d.pkl"%(max_iter)), "rb") as fid:
-            data = pkl.load(fid)
-        
-        # allocate data
-        self.param_vec = data["params"]
-        job_id = data["job_id"]
-        max_job_id = int(np.max(job_id))
-        self.job_id = max_job_id+1
-
-        # reset log
+    def load_history(self, fdir_history=None):
+        """
+        Load previous evolved data
+        """
+        import genalg.logger as gl
         import shutil
-        flog = os.path.join(self.log_dir, "log.txt")
-        fit_scores = read_log(flog)
-        shutil.copy(flog, os.path.join(self.log_dir, "xlog.txt"))
 
-        self.clock = len(fit_scores)
+        if fdir_history is None:
+            fdir_history = self.log_dir
 
-        with open(os.path.join(self.log_dir, "log.txt"), "w") as fid:
-            for nline in range(max_iter):
-                for n in fit_scores[nline]:
-                    fid.write("%f,"%(n))
-                fid.write("\n")
+        log_obj = gl.Logger(fdir_history)
+        max_param_id = len(log_obj.fit_scores)
+        log_obj.load_params(max_param_id-1)
 
-        # remove the file where the indxe is larger than max_job_id
-        fsimul = [f for f in os.listdir(self.log_dir) if "id" in f]
-        simul_id = np.sort(np.unique([int(f[2:].split("_")[0]) for f in fsimul]))
+        mu_prev = np.shape(log_obj.param_set)[0]
+        if mu_prev != self.mu:
+            raise AttributeError("The # of params in prev (%d) is different withh current mu (%d)"%(mu_prev, self.mu))
 
-        for n in np.arange(max_job_id+1, len(simul_id)):
-            tag = os.path.join(self.log_dir, "id%06d"%(n))
-            remove_file(tag+"_info.txt")
-            remove_file(tag+"_result.txt")
-
+        # copy
+        if fdir_history != self.log_dir:
+            shutil.copy(os.path.join(fdir_history, "log.txt"), 
+                        os.path.join(self.log_dir, "log.txt"))
+        else: # save original file
+            shutil.copy(os.path.join(fdir_history, "log.txt"), 
+                        os.path.join(fdir_history, "log_prev.txt"))
+        
+        self.param_vec = log_obj.param_set
+        self.parent_id = log_obj.job_id_set
+        self.job_id = max_param_id
+        self.clock = max_param_id
 
 def remove_index(arr_list, id_target):
     stack = 0
     for n in id_target:
         arr_list.pop(n-stack)
         stack += 1
-
 
 def remove_element(arr, target_val):
     arr = list(arr)

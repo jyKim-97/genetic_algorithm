@@ -28,13 +28,12 @@ if __name__ == "__main__":
     solver = evolve.EA(2, mu=2, num_select=5, num_offspring=20, num_parent=50, use_multiprocess=True)
     solver.set_object_func(fpotential)
 
-    # pmin = np.array([0, 0])
-    # pmax = np.array([10, 10])
     pmin = np.array([-5.12, -5.12])
     pmax = np.array([5.12, 5.12])
     solver.set_min_max(pmin, pmax)
 
     param_set = []
+    # solver.load_history()
     solver.random_initialization()
     param_set.append(solver.param_vec.copy())
     for n in tqdm(range(1000)):

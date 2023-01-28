@@ -32,7 +32,7 @@ class Logger:
         with open(os.path.join(self.parent_dir, "params_%d.pkl"%(param_id)), "rb") as fid:
             data = pkl.load(fid)
             self.job_id_set = data["job_id"]
-            self.p = data["params"]
+            self.param_set = data["params"]
             
         self.load_param_id = param_id
             
