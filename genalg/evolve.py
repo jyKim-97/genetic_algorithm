@@ -178,12 +178,14 @@ class EA:
     #     id_sort = np.argsort(fitness)[::-1]
     #     return id_sort[:num_select]
 
-    def natural_selection(self, fitness):
+    def natural_selection(self, fitness, num_opt_select=2):
         id_tot = list(range(self.num_offspring+self.num_select))
         # find the best model
-        n_best = np.nanargmax(fitness)
-        id_tot.pop(n_best)
-        id_select = [n_best]
+        id_select = []
+        for n in range(num_opt_select):
+            n_best = np.nanargmax(fitness[id_tot])
+            id_tot.pop(n_best)
+            id_select.append(n_best)
 
         # clean nan
         id_nan = np.where(np.isnan(fitness))[0]
@@ -195,9 +197,8 @@ class EA:
         if fmin < 0:
             fitness_pos += fmin
 
-
         prob_select = fitness_pos / np.sum(fitness_pos)
-        for n in range(self.num_select-1):
+        for n in range(self.num_select-num_opt_select):
             p = np.random.rand()
             i, p_cum = 0, 0
             while p_cum < p:
@@ -321,7 +322,7 @@ class EA:
         for n in range(self.num_offspring):
             for i in range(self.num_params):
                 if np.random.rand() < p_th:
-                    sgm = (self.pmax[i] - self.pmin[i])/10
+                    sgm = (self.pmax[i] - self.pmin[i])/5
                     x = offspring[i, n] + np.random.randn()*sgm
                     if x > self.pmax[i]:
                         x = self.pmax[i]
