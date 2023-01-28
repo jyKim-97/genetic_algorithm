@@ -360,9 +360,9 @@ class EA:
         max_param_id = len(log_obj.fit_scores)
         log_obj.load_params(max_param_id-1)
 
-        mu_prev = np.shape(log_obj.param_set)[0]
-        if mu_prev != self.mu:
-            raise AttributeError("The # of params in prev (%d) is different withh current mu (%d)"%(mu_prev, self.mu))
+        num = np.shape(log_obj.param_set)[0]
+        if num != self.num_params:
+            raise AttributeError("The # of params in prev (%d) is different withh current mu (%d)"%(num, self.num_params))
 
         # copy
         if fdir_history != self.log_dir:
