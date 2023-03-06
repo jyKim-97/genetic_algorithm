@@ -7,7 +7,7 @@ import pickle as pkl
 
 
 class EA:
-    def __init__(self, num_params, log_dir="./log", mu=2, num_select=2, num_offspring=5, num_parent=10, use_multiprocess=False, num_process=4, do_mutate=True, crossover_type="pcx"):
+    def __init__(self, num_params, log_dir="./log", mu=2, num_select=2, num_offspring=5, num_parent=10, use_multiprocess=False, num_overlap=1, num_process=4, do_mutate=True, crossover_type="pcx"):
         self.num_parent = int(num_parent)
         self.num_offspring = int(num_offspring)
         self.num_params = int(num_params)
@@ -19,6 +19,7 @@ class EA:
         self.clock = 0
         self.num_process = num_process
         self.num_select = num_select
+        self.num_overlap = num_overlap
 
         self.mu = mu
         self.param_vec = np.zeros([self.num_params, self.num_parent])
@@ -138,8 +139,12 @@ class EA:
                 args.append([offspring[:,n], self.job_id])
                 self.count_job()
 
-            with mp.Pool(self.num_process) as p:
-                fitness = p.map(self.fobj, args)
+            fitness = []
+            for n in range(self.num_overlap):
+                with mp.Pool(self.num_process) as p:
+                    fitness_tmp = p.map(self.fobj, args[n*self.num_process:(n+1)*self.num_process])
+                fitness.extend(fitness_tmp)
+
         else:
             fitness = []
             for n in range(self.num_offspring):
@@ -196,9 +201,10 @@ class EA:
         fmin = np.nanmin(fitness_pos)
         if fmin < 0:
             fitness_pos += fmin
+        fitness_pos = list(fitness_pos)
 
-        prob_select = fitness_pos / np.sum(fitness_pos)
         for n in range(self.num_select-num_opt_select):
+            prob_select = np.array(fitness_pos) / np.sum(fitness_pos)
             p = np.random.rand()
             i, p_cum = 0, 0
             while p_cum < p:
@@ -208,7 +214,10 @@ class EA:
 
                 p_cum += prob_select[i]
             i -= 1
+            # pick
             id_select.append(id_tot[i])
+            fitness_pos.pop(i)
+
         return id_select
 
     def crossover(self):
@@ -380,6 +389,7 @@ class EA:
 
 def remove_index(arr_list, id_target):
     stack = 0
+    id_target = np.sort(id_target)
     for n in id_target:
         arr_list.pop(n-stack)
         stack += 1
