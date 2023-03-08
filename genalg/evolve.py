@@ -81,6 +81,7 @@ class EA:
             self.print_log()
 
     def random_initialization(self):
+        # all parent have id as -1
         for n in range(self.num_parent):
             self.param_vec[:, n] = np.random.uniform(self.pmin, self.pmax)
 
@@ -151,7 +152,7 @@ class EA:
                 fitness.append(self.fobj([offspring[:,n], self.job_id]))
                 self.count_job()
 
-        # select paranet to change
+        # select parent to change
         id_selected, _ = self.pick_id(self.num_parent, self.num_select)
 
         # evalutate score
@@ -161,21 +162,69 @@ class EA:
         buffer_id = self.offspring_id.copy()
         buffer_param = self.param_vec.copy()
         for nid in id_selected:
-            buffer_id.append(self.parent_id[nid])
+            # To differentiate with offspring
+            # add index not parent job id (because at the initial, all the parent have -1 as job id)
+            buffer_id.append(-int(nid)-1) # To include "0"  
+        id_selected = list(id_selected)
 
         # natural selection
-        id_live = self.natural_selection(pop_scores)
-        for n in range(self.num_select):
+        id_live = self.natural_selection(pop_scores) # index
+        # print(id_live, pop_scores.shape, len(buffer_id), len(id_selected), len(self.offspring_id), self.num_offspring)
+
+        # print("buffer id:", buffer_id)
+        # print("id_live:", id_live)
+        # print("id_selected:", id_selected)
+        # print("id; ", [buffer_id[n] for n in id_live])
+
+        # check is there any negative index in buffer_id
+        # - id_live: index who lived
+        # - buffer_id: [job_id for offspring, -id_selected]
+        # - id_selected: index for selected parents
+
+        n = 0
+        while n < len(id_live):
+            nid = id_live[n]
+            b_id = buffer_id[nid]
+            if b_id < 0:
+                id_live.remove(nid)
+                buffer_id.pop(nid)
+                id_selected.remove(-b_id-1)
+                for i in range(n, len(id_live)):
+                    id_live[i] -= 1
+                n -= 1
+            n += 1
+
+        for n in id_live:
+            # print("n: %d, len_id: %d"%(n, len(buffer_id)))
+            nid = buffer_id[n] # index of the parent
+            if nid < 0:
+                # print("pop: ", n, nid)
+                id_live.pop(n)
+                buffer_id.pop(n)
+                id_selected.remove(-nid-1)
+        # print("id_live:", id_live)
+
+        # change the parent to offspring
+        for n in range(len(id_live)):
             nid = id_live[n]
             new_id = id_selected[n]
-            if nid < self.num_offspring:
-                self.param_vec[:, new_id] = offspring[:, nid]
-            else:
-                nold = id_selected[nid - self.num_offspring] 
-                self.param_vec[:, new_id] = buffer_param[:, nold]
-
+            # print(nid, new_id)
+            self.param_vec[:, new_id] = offspring[:, nid]
             self.fit_score[new_id] = pop_scores[nid]
             self.parent_id[new_id] = buffer_id[nid]
+
+
+        # for n in range(self.num_select):
+        #     nid = id_live[n]
+        #     new_id = id_selected[n]
+        #     if nid < self.num_offspring:
+        #         self.param_vec[:, new_id] = offspring[:, nid]
+        #     else:
+        #         nold = id_selected[nid - self.num_offspring] 
+        #         self.param_vec[:, new_id] = buffer_param[:, nold]
+
+        #     self.fit_score[new_id] = pop_scores[nid]
+        #     self.parent_id[new_id] = buffer_id[nid]
 
         self.clock += 1
 
@@ -217,6 +266,8 @@ class EA:
             # pick
             id_select.append(id_tot[i])
             fitness_pos.pop(i)
+
+        id_select = list(np.sort(id_select))
 
         return id_select
 
@@ -308,7 +359,7 @@ class EA:
         basis = gram_schmidt(tmp_vec)
         basis = basis[:, 1:]
 
-        # offspinrg
+        # offspring
         offspring = x_pick.copy()
         offspring += np.random.randn() * self.sgm_eta * d_vec
         tmp = D * np.dot(basis, np.random.randn(self.mu-1, 1)) * self.sgm_xi
@@ -316,7 +367,6 @@ class EA:
         
         return offspring
     
-
     def pick_id(self, max_id, num_pick):
         id_remain = list(range(max_id))
         id_select = np.random.choice(id_remain, num_pick, replace=False)
@@ -346,7 +396,7 @@ class EA:
         # save fitness
         with open(os.path.join(self.log_dir, "log.txt"), "a") as fid:
             for n in range(self.num_parent):
-                fid.write("%f,"%(self.fit_score[n]))
+                fid.write("%d:%f,"%(self.parent_id[n], self.fit_score[n]))
             fid.write("\n")
 
         # save parameters
@@ -387,12 +437,14 @@ class EA:
         self.clock = max_param_id
         self.fit_score = np.array(log_obj.fit_scores[-1])
 
+
 def remove_index(arr_list, id_target):
     stack = 0
     id_target = np.sort(id_target)
     for n in id_target:
         arr_list.pop(n-stack)
         stack += 1
+
 
 def remove_element(arr, target_val):
     arr = list(arr)
