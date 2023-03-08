@@ -11,7 +11,7 @@ class Logger:
         self.load_param_id = -1
         
     def _read_log(self):
-        self.fit_scores = read_log(os.path.join(self.parent_dir, "log.txt"))
+        self.fit_scores, self.job_id = read_log(os.path.join(self.parent_dir, "log.txt"))
     
     def view_log(self, nstart=0):
         avg_score = np.average(self.fit_scores, axis=1)
@@ -42,6 +42,9 @@ def read_log(log_fname):
     with open(log_fname, "r") as fid:
         line = fid.readline()
         while line:
-            fit_scores.append([float(x) for x in line.split(",")[:-1]])
+            tmp = line.split(",")[:-1]
+            for p in tmp:
+                fit_scores.append(float(tmp[1]))
+                job_id.append(int(tmp[0]))
             line = fid.readline()
-    return fit_scores
+    return fit_scores, job_id
