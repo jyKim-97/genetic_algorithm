@@ -11,18 +11,18 @@ class Logger:
         self.load_param_id = -1
         
     def _read_log(self):
-        self.fit_scores, self.job_id = read_log(os.path.join(self.parent_dir, "log.txt"))
+        self.fit_scores, self.job_ids = read_log(os.path.join(self.parent_dir, "log.txt"))
     
-    def view_log(self, nstart=0):
-        avg_score = np.average(self.fit_scores, axis=1)
+    def view_log(self, nstart=0, f=np.average):
+        s = f(self.fit_scores, axis=1)
         
         plt.figure(dpi=120, figsize=(4,4))
-        plt.plot(avg_score[nstart:], 'k.-')
+        plt.plot(s[nstart:], 'k.-')
         plt.xlabel("epoch", fontsize=20)
         plt.ylabel("fitness", fontsize=20)
         plt.show()
 
-        print(len(avg_score))
+        print(len(s))
         
     def load_params(self, param_id):
         nlog = len(self.fit_scores)
@@ -39,12 +39,15 @@ class Logger:
 
 def read_log(log_fname):
     fit_scores = []
+    job_ids = []
     with open(log_fname, "r") as fid:
         line = fid.readline()
         while line:
-            tmp = line.split(",")[:-1]
-            for p in tmp:
-                fit_scores.append(float(tmp[1]))
-                job_id.append(int(tmp[0]))
+            fit_scores.append([])
+            job_ids.append([])
+            for tmp in line.split(",")[:-1]:
+                p = tmp.split(":")
+                fit_scores[-1].append(float(p[1]))
+                job_ids[-1].append(int(p[0]))
             line = fid.readline()
-    return fit_scores, job_id
+    return fit_scores, job_ids

@@ -439,11 +439,9 @@ class EA:
 
 
 def remove_index(arr_list, id_target):
-    stack = 0
-    id_target = np.sort(id_target)
+    id_target = np.sort(id_target)[::-1]
     for n in id_target:
-        arr_list.pop(n-stack)
-        stack += 1
+        arr_list.pop(n)
 
 
 def remove_element(arr, target_val):
