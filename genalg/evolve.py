@@ -84,7 +84,9 @@ class EA:
         # all parent have id as -1
         for n in range(self.num_parent):
             self.param_vec[:, n] = np.random.uniform(self.pmin, self.pmax)
+        self.eval_initialization()
 
+    def eval_initialization(self):
         if self.use_multiprocess:
             args = []
             for n in range(self.num_parent):
@@ -243,7 +245,7 @@ class EA:
 
         # clean nan
         id_nan = np.where(np.isnan(fitness))[0]
-        remove_index(id_tot, id_nan)
+        id_tot = remove_index(id_tot, id_nan)
 
         # use Roullete-Wheel method
         fitness_pos = fitness[id_tot]
@@ -438,11 +440,13 @@ class EA:
         self.fit_score = np.array(log_obj.fit_scores[-1])
 
 
+# def remove_index(arr_list, id_target):
+#     id_target = np.sort(id_target)[::-1]
+#     for n in id_target:
+#         arr_list.pop(n)
 def remove_index(arr_list, id_target):
-    id_target = np.sort(id_target)[::-1]
-    for n in id_target:
-        arr_list.pop(n)
-
+    return np.delete(arr_list, id_target)
+    
 
 def remove_element(arr, target_val):
     arr = list(arr)
